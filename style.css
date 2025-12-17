@@ -17,6 +17,8 @@ body {
 
 
 .topbar {
+    top: 0px;
+    position: fixed;
     width: 100%;
     height: 50px;
     background-color: rgb(255, 239, 208);
@@ -25,6 +27,7 @@ body {
    justify-content: space-between; 
     padding-right: 30px;
     box-sizing: border-box;
+    border-bottom: 3px solid rgba(255, 210, 119, 1);
 }
 
 .social-icons a {
@@ -40,29 +43,117 @@ body {
 }
 
 .text-box {
-    border: 50px solid #000000;
+    /* border: 50px solid #000000; */
                  /* space inside border */
     margin: 50px auto;          /* space outside + center */
     max-width: 900px;           /* readable width */
     line-height: 1.7;
-    padding-left: 30px;
-    padding-right: 20px;
-    min-width: 700;
+    padding: 30px;
+    width: 90%;
     
 }
+
 .about-title {
     text-align: center;
+    margin-top: 70px;
+    font-size: 45px;
 
+
+}
+.logo i {
+    position: absolute;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* default state */
+.ghost-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.menu-icon {
+    opacity: 0;
+    transform: scale(0.8);
+     color: #db3b3b;
+
+}
+
+/* hover state */
+.logo:hover .ghost-icon {
+    opacity: 0;
+    transform: scale(0.3);
+}
+
+.logo:hover .menu-icon {
+    opacity: 1;
+    transform: scale(1);
 }
 .logo {
-  color: rgb(0, 0, 0);
+    position: relative;
     font-size: 35px;
-    margin-left: 30px;
-    text-decoration: none;
-    transition: 0.15s ease;
-   
+    color: black;
+    cursor: pointer;
+    margin-left: 30px ;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.drawer {
+  position: fixed;
+  top: 50px;
+  left: 0;
+
+  width: 240px;
+  height: 100%;
+
+  background:rgb(255, 239, 208);
+  color: #db3b3b;
+
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+
+  padding-top: 80px;
+}
+.drawer ul {
+  list-style: none;
 }
 
-.logo a:hover {
+.drawer li {
+  padding: 15px 10px;
+}
+
+.drawer a {
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+  font-size: 20px;
+}
+
+
+html {
+  scroll-behavior: smooth;
+}
+.drawer.open {
+    transform: translateX(0);
+}
+.drawer li:hover a {
+  color: #db3b3b;
+  font-weight: bold;
+}
+.projects {
+ text-align: center;
+    margin-top: 70px;
+    font-size: 45px;
+
+
+}
+.word {
+    display: inline; /* Allows transition and layout to work properly */
+    transition: color 0.5s, font-weight 0.3s;
+    cursor: default;
+}
+
+/* The hover effect for each word */
+.word:hover {
     color: #db3b3b;
+    font-weight: bold;
 }
