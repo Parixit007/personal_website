@@ -125,7 +125,8 @@ body {
 .drawer a {
   color: rgb(0, 0, 0);
   text-decoration: none;
-  font-size: 20px;
+  font-size: 22px;
+    font-weight: bold;
 }
 
 
@@ -139,21 +140,25 @@ html {
   color: #db3b3b;
   font-weight: bold;
 }
-.projects {
- text-align: center;
-    margin-top: 70px;
-    font-size: 45px;
 
 
-}
 .word {
     display: inline; /* Allows transition and layout to work properly */
     transition: color 0.5s, font-weight 0.3s;
     cursor: default;
+    
 }
 
 /* The hover effect for each word */
 .word:hover {
     color: #db3b3b;
     font-weight: bold;
+}
+.projects {
+    align-items: center;
+     text-align: center;
+}
+.heading {  align-items: center;
+     text-align: center;
+
 }
