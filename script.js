@@ -26,7 +26,7 @@ window.onbeforeunload = function () {
 
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
-}
+} 
 const textBox = document.querySelector(".text-box");
 const paragraphs = textBox.querySelectorAll("p");
 
