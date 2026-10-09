@@ -1,0 +1,320 @@
+---
+// Game night on the felt: pocket aces fan out on hover, the pool ticks up, a player matches.
+---
+
+<div class="poker" data-play aria-hidden="true">
+  <div class="felt"></div>
+
+  <div class="hand">
+    <div class="pcard c1">
+      <span class="corner">A<br />♠</span>
+      <span class="pip">♠</span>
+    </div>
+    <div class="pcard c2 red">
+      <span class="corner">A<br />♥</span>
+      <span class="pip">♥</span>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="chip-stack s1"><i></i><i></i><i></i><i></i></span>
+    <span class="chip-stack s2"><i></i><i></i><i></i></span>
+    <span class="chip-stack s3"><i></i><i></i><i></i><i></i><i></i></span>
+    <span class="chip-fly"></span>
+  </div>
+
+  <div class="pot">
+    <span class="pot-label">Pool</span>
+    <span class="pot-amount">
+      <span class="amt a1">₹800</span>
+      <span class="amt a2">₹1,200</span>
+    </span>
+    <span class="pot-actions">
+      <span class="act match">Match</span>
+      <span class="act">Opt out</span>
+    </span>
+  </div>
+</div>
+
+<style>
+  .poker {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .felt {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.12), transparent 55%),
+      radial-gradient(100% 100% at 50% 40%, #1d7a4c, #0f5134 60%, #0a3d27);
+  }
+
+  .felt::after {
+    content: '';
+    position: absolute;
+    inset: 18px;
+    border-radius: 999px;
+    border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  }
+
+  .hand {
+    position: absolute;
+    left: 50%;
+    top: 26px;
+    width: 150px;
+    height: 120px;
+    margin-left: -110px;
+  }
+
+  .pcard {
+    position: absolute;
+    left: 30px;
+    top: 0;
+    width: 72px;
+    height: 100px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #ffffff, #f1efe9);
+    color: #16161a;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 14px 28px rgba(0, 0, 0, 0.35);
+    transform-origin: 50% 110%;
+    transition: transform 0.8s var(--spring-bouncy);
+  }
+
+  .pcard.red {
+    color: #d8262f;
+  }
+
+  .corner {
+    position: absolute;
+    top: 7px;
+    left: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .pip {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 38px;
+  }
+
+  .c1 {
+    transform: rotate(-9deg) translateX(-10px);
+  }
+
+  .c2 {
+    transform: rotate(8deg) translateX(14px);
+  }
+
+  :global(.card:hover) .c1 {
+    transform: rotate(-18deg) translate(-22px, -8px);
+  }
+
+  :global(.card:hover) .c2 {
+    transform: rotate(16deg) translate(26px, -10px);
+  }
+
+  .chips {
+    position: absolute;
+    right: 50%;
+    top: 58px;
+    margin-right: -150px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .chip-stack {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .chip-stack i,
+  .chip-fly {
+    display: block;
+    width: 38px;
+    height: 12px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background:
+      repeating-conic-gradient(from 0deg, #fff 0 10deg, var(--cc) 10deg 30deg) border-box,
+      var(--cc);
+    border: 2px solid var(--cc);
+    box-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.35),
+      inset 0 0 0 3px var(--cc);
+  }
+
+  .s1 {
+    --cc: #d8262f;
+  }
+
+  .s2 {
+    --cc: #1c62d6;
+  }
+
+  .s3 {
+    --cc: #1b1b1f;
+  }
+
+  /* Lands on top of the red stack. */
+  .chip-fly {
+    --cc: #d8262f;
+    position: absolute;
+    left: 0;
+    bottom: 26px;
+    opacity: 0;
+  }
+
+  .pot {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 7px 7px 16px;
+    border-radius: 999px;
+    color: #fff;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    background: rgba(10, 30, 20, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 10px 30px rgba(0, 0, 0, 0.3);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+  }
+
+  .pot-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  .pot-amount {
+    display: grid;
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .amt {
+    grid-area: 1 / 1;
+  }
+
+  .a1 {
+    opacity: 0;
+  }
+
+  .pot-actions {
+    display: flex;
+    gap: 5px;
+  }
+
+  .act {
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 650;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .act.match {
+    background: #30d158;
+    color: #04290f;
+  }
+
+  /* ---------- The loop (6s): a chip flies in, the pool updates, Match pulses ---------- */
+
+  .is-playing .chip-fly {
+    animation: fly 6s var(--ease-out) infinite;
+  }
+
+  .is-playing .a1 {
+    animation: amt-old 6s ease infinite;
+  }
+
+  .is-playing .a2 {
+    animation: amt-new 6s ease infinite;
+  }
+
+  .is-playing .match {
+    animation: match 6s ease infinite;
+  }
+
+  @keyframes fly {
+    0%,
+    30% {
+      opacity: 0;
+      transform: translate(-160px, 80px) scale(0.8);
+    }
+    34% {
+      opacity: 1;
+    }
+    48% {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    54%,
+    100% {
+      opacity: 0;
+      transform: translate(0, -4px);
+    }
+  }
+
+  @keyframes amt-old {
+    0%,
+    48% {
+      opacity: 1;
+      transform: none;
+    }
+    54%,
+    100% {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes amt-new {
+    0%,
+    50% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    56%,
+    96% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes match {
+    0%,
+    18%,
+    30%,
+    100% {
+      transform: none;
+      box-shadow: 0 0 0 0 rgba(48, 209, 88, 0);
+    }
+    22% {
+      transform: scale(0.92);
+      box-shadow: 0 0 0 6px rgba(48, 209, 88, 0.35);
+    }
+  }
+</style>

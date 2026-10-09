@@ -1,0 +1,317 @@
+---
+// A crowded tab strip. Press the extension: stray new tabs and homepages fold away,
+// the pinned and active tabs stay put.
+const tabs = [
+  { title: 'Mail', icon: 'M', tint: '#0a84ff', pinned: true },
+  { title: 'New Tab', icon: '+', tint: '#8e8e93', stray: true },
+  { title: 'Declutter · GitHub', icon: '◆', tint: '#6e6e73', active: true },
+  { title: 'Google', icon: 'G', tint: '#4285f4', stray: true },
+  { title: 'YouTube', icon: '▶', tint: '#ff3b30', stray: true },
+  { title: 'Lab report.pdf', icon: '▤', tint: '#ff9f0a' },
+  { title: 'New Tab', icon: '+', tint: '#8e8e93', stray: true },
+];
+let strayIndex = 0;
+---
+
+<div class="tabsv" data-play aria-hidden="true">
+  <div class="browser">
+    <div class="strip">
+      <span class="lights"><i></i><i></i><i></i></span>
+      {
+        tabs.map((t) => (
+          <span
+            class:list={['tab', { pinned: t.pinned, active: t.active, stray: t.stray }]}
+            style={t.stray ? `--s:${strayIndex++}` : undefined}
+          >
+            <span class="fav" style={`--tint:${t.tint}`}>
+              {t.icon}
+            </span>
+            {!t.pinned && <span class="ttl">{t.title}</span>}
+          </span>
+        ))
+      }
+    </div>
+    <div class="toolbar">
+      <span class="url">github.com/Parixit007/Declutter</span>
+      <span class="ext">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"
+          ></path>
+        </svg>
+      </span>
+    </div>
+    <div class="page">
+      <span class="sk w70"></span>
+      <span class="sk w90"></span>
+      <span class="sk w50"></span>
+      <div class="toast"><span>✓</span> Closed 4 tabs</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tabsv {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(80% 90% at 0% 0%, rgba(255, 159, 10, 0.2), transparent 60%),
+      radial-gradient(70% 80% at 100% 100%, rgba(10, 132, 255, 0.14), transparent 60%);
+  }
+
+  .browser {
+    position: absolute;
+    top: 28px;
+    left: 24px;
+    right: -60px;
+    bottom: -30px;
+    border-radius: 14px;
+    background: var(--surface-solid);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    font-size: 11.5px;
+  }
+
+  .strip {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 40px;
+    padding: 0 10px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .lights {
+    display: flex;
+    gap: 6px;
+    align-self: center;
+    margin-right: 8px;
+  }
+
+  .lights i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  .lights i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .lights i:nth-child(3) {
+    background: #28c840;
+  }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 1 138px;
+    min-width: 0;
+    max-width: 138px;
+    height: 31px;
+    padding: 0 10px;
+    border-radius: 9px 9px 0 0;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .tab.pinned {
+    flex: none;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .tab.active {
+    color: var(--text);
+    background: var(--surface-solid);
+    box-shadow: 0 -1px 0 var(--line);
+  }
+
+  .ttl {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fav {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--tint);
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .url {
+    flex: 1;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .ext {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin-right: 60px;
+    border-radius: 8px;
+    color: #ff9f0a;
+    background: color-mix(in srgb, #ff9f0a 16%, transparent);
+  }
+
+  .ext svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 22px 20px;
+  }
+
+  .sk {
+    height: 10px;
+    border-radius: 6px;
+    background: var(--surface-2);
+  }
+
+  .w70 {
+    width: 55%;
+  }
+
+  .w90 {
+    width: 70%;
+  }
+
+  .w50 {
+    width: 38%;
+  }
+
+  .toast {
+    position: absolute;
+    left: 20px;
+    top: 86px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 650;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .toast span {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 10px;
+    color: #fff;
+    background: #30d158;
+  }
+
+  /* Static state = after decluttering. */
+  .stray {
+    max-width: 0;
+    padding-inline: 0;
+    opacity: 0;
+  }
+
+  /* ---------- The loop (8s) ---------- */
+
+  .is-playing .stray {
+    animation: fold 8s var(--ease-in-out) infinite both;
+    animation-delay: calc(var(--s) * 90ms);
+  }
+
+  .is-playing .ext {
+    animation: press 8s ease infinite;
+  }
+
+  .is-playing .toast {
+    animation: toast 8s var(--ease-out) infinite;
+  }
+
+  @keyframes fold {
+    0%,
+    32% {
+      max-width: 138px;
+      padding-inline: 10px;
+      opacity: 1;
+    }
+    42%,
+    86% {
+      max-width: 0;
+      padding-inline: 0;
+      opacity: 0;
+    }
+    96%,
+    100% {
+      max-width: 138px;
+      padding-inline: 10px;
+      opacity: 1;
+    }
+  }
+
+  @keyframes press {
+    0%,
+    24%,
+    32%,
+    100% {
+      transform: none;
+      box-shadow: 0 0 0 0 rgba(255, 159, 10, 0);
+    }
+    28% {
+      transform: scale(0.86);
+      box-shadow: 0 0 0 6px rgba(255, 159, 10, 0.3);
+    }
+  }
+
+  @keyframes toast {
+    0%,
+    44% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.9);
+    }
+    50%,
+    82% {
+      opacity: 1;
+      transform: none;
+    }
+    88%,
+    100% {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+</style>

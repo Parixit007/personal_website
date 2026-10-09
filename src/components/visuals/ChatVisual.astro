@@ -1,0 +1,374 @@
+---
+// A friend chats with the bot: it describes a photo, then recalls something from memory.
+---
+
+<div class="chat" data-play aria-hidden="true">
+  <div class="panel">
+    <div class="head">
+      <span class="avatar">✦</span>
+      <span class="who">
+        <b>Assistant</b>
+        <small><i></i>on-device · Ollama</small>
+      </span>
+      <span class="lock">whitelist on</span>
+    </div>
+
+    <div class="thread">
+      <div class="msg in m1">
+        <span class="photo"><span class="sun"></span><span class="hill h1"></span><span class="hill h2"></span></span>
+        what’s in this pic?
+      </div>
+      <div class="msg out m2">A sunset over the hills 🌄</div>
+      <div class="msg in m3">remember my exam’s on friday?</div>
+      <div class="typing"><i></i><i></i><i></i></div>
+      <div class="msg out m4">You told me last week. Good luck! 📚</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .chat {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(80% 90% at 100% 0%, rgba(48, 209, 88, 0.2), transparent 60%),
+      radial-gradient(70% 80% at 0% 100%, rgba(100, 210, 255, 0.14), transparent 60%);
+  }
+
+  .panel {
+    position: absolute;
+    left: 50%;
+    top: 18px;
+    bottom: -30px;
+    width: min(340px, calc(100% - 40px));
+    transform: translateX(-50%);
+    border-radius: 22px;
+    background: var(--surface-solid);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, #30d158, #0a84ff);
+  }
+
+  .who {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .who b {
+    font-size: 13px;
+  }
+
+  .who small {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .who small i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--live);
+  }
+
+  .lock {
+    margin-left: auto;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    background: var(--surface-2);
+  }
+
+  /* Bottom-anchored like a real chat: new messages push older ones up and out of view. */
+  .thread {
+    position: absolute;
+    inset: 53px 0 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 12px 12px;
+    overflow: hidden;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  .msg {
+    flex: none;
+    max-width: 78%;
+    max-height: 140px;
+    margin-top: 7px;
+    padding: 7px 11px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .in {
+    align-self: flex-start;
+    background: var(--surface-2);
+    border-bottom-left-radius: 5px;
+  }
+
+  .out {
+    align-self: flex-end;
+    color: #06270f;
+    background: #b8f0c3;
+    border-bottom-right-radius: 5px;
+  }
+
+  :global([data-theme='dark']) .out {
+    color: #e9fff0;
+    background: #0f6b3a;
+  }
+
+  .photo {
+    position: relative;
+    display: block;
+    width: 92px;
+    height: 50px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ff9f6b, #ffcf8a 60%, #ffe3a8);
+  }
+
+  .sun {
+    position: absolute;
+    left: 58%;
+    top: 16px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff4d6;
+    box-shadow: 0 0 16px #fff1c2;
+  }
+
+  .hill {
+    position: absolute;
+    bottom: -18px;
+    border-radius: 50%;
+  }
+
+  .h1 {
+    left: -20px;
+    width: 110px;
+    height: 44px;
+    background: #9b4f5d;
+  }
+
+  .h2 {
+    right: -30px;
+    width: 120px;
+    height: 50px;
+    background: #6d3450;
+  }
+
+  .typing {
+    display: none;
+    flex: none;
+    align-self: flex-end;
+    gap: 4px;
+    margin-top: 7px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .typing i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+    animation: dot 1s ease-in-out infinite;
+  }
+
+  .typing i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .typing i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes dot {
+    0%,
+    100% {
+      transform: none;
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateY(-3px);
+      opacity: 1;
+    }
+  }
+
+  /* ---------- The loop (12s) ----------
+     Each message grows in (height, spacing, opacity) at its own moment, so the thread scrolls. */
+
+  .is-playing .msg {
+    animation: 12s var(--ease-out) infinite both;
+  }
+
+  .is-playing .m1 {
+    animation-name: msg-1;
+  }
+
+  .is-playing .m2 {
+    animation-name: msg-2;
+  }
+
+  .is-playing .m3 {
+    animation-name: msg-3;
+  }
+
+  .is-playing .m4 {
+    animation-name: msg-4;
+  }
+
+  .is-playing .typing {
+    display: flex;
+    animation: typing 12s ease infinite both;
+  }
+
+  @keyframes msg-1 {
+    0%,
+    3% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    8%,
+    92% {
+      opacity: 1;
+      max-height: 140px;
+      margin-top: 7px;
+      padding-block: 7px;
+      transform: none;
+    }
+    98%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes msg-2 {
+    0%,
+    18% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    23%,
+    92% {
+      opacity: 1;
+      max-height: 140px;
+      margin-top: 7px;
+      padding-block: 7px;
+      transform: none;
+    }
+    98%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes msg-3 {
+    0%,
+    36% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    41%,
+    92% {
+      opacity: 1;
+      max-height: 140px;
+      margin-top: 7px;
+      padding-block: 7px;
+      transform: none;
+    }
+    98%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* The typing bubble holds a slot, then the reply takes its place. */
+  @keyframes typing {
+    0%,
+    46% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+    }
+    48%,
+    58% {
+      opacity: 1;
+      max-height: 30px;
+      margin-top: 7px;
+      padding-block: 10px;
+    }
+    60%,
+    100% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+    }
+  }
+
+  @keyframes msg-4 {
+    0%,
+    59% {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      padding-block: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    64%,
+    92% {
+      opacity: 1;
+      max-height: 140px;
+      margin-top: 7px;
+      padding-block: 7px;
+      transform: none;
+    }
+    98%,
+    100% {
+      opacity: 0;
+    }
+  }
+</style>

@@ -1,0 +1,577 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+// Words light up one by one as the paragraph scrolls through the viewport (scripts/scrub.ts).
+const statement =
+  'I spend a good part of my day learning something new. I enjoy quiet focus, late-night learning sessions, and the satisfaction of finally understanding something that didn’t make sense before.';
+const emphasis = new Set(['finally', 'understanding']);
+const words = statement.split(' ');
+
+// Degree progress, computed at build time and refreshed in the browser.
+const start = Date.parse(site.education.start);
+const end = Date.parse(site.education.end);
+const progress = Math.min(1, Math.max(0, (Date.now() - start) / (end - start)));
+const year = Math.min(4, Math.max(1, Math.floor((Date.now() - start) / (365.25 * 864e5)) + 1));
+const gradYear = new Date(end).getFullYear();
+---
+
+<section class="section about" id="about" aria-labelledby="about-title">
+  <div class="container">
+    <SectionHeading
+      num="01"
+      eyebrow="About"
+      id="about-title"
+      title="Curious by default."
+      muted="Always learning, always building."
+    />
+
+    <p class="statement" data-scrub style={`--n:${words.length}`}>
+      {
+        words.map((word, i) => (
+          <>
+            <span class:list={['sw', { em: emphasis.has(word) }]} style={`--i:${i}`}>
+              {word}
+            </span>{' '}
+          </>
+        ))
+      }
+    </p>
+
+    <div class="bento">
+      <article class="tile tile-edu card" data-reveal data-spotlight>
+        <span class="tile-icon" style="--tint:#ff9f0a"><Icon name="cap" /></span>
+        <p class="tile-label">Education</p>
+        <h3 class="tile-title">{site.education.degree}</h3>
+        <p class="tile-text">{site.education.school}, {site.education.city}</p>
+        <div
+          class="degree"
+          data-degree
+          data-start={site.education.start}
+          data-end={site.education.end}
+          style={`--progress:${progress}`}
+        >
+          <div class="degree-track" aria-hidden="true">
+            <span class="degree-fill"></span>
+            <span class="degree-dot"></span>
+          </div>
+          <div class="degree-meta">
+            <span>{new Date(start).getFullYear()}</span>
+            <span data-degree-label>Year {year} of 4</span>
+            <span>{gradYear}</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="tile tile-sky card" data-reveal data-sky data-daypart="night" style="--d:80">
+        <div class="sky" aria-hidden="true">
+          <span class="stars"></span>
+          <span class="orb"></span>
+        </div>
+        <p class="sky-place"><Icon name="pin" /> {site.location}</p>
+        <p class="sky-time" data-clock>IST</p>
+        <p class="sky-zone">India Standard Time · UTC+5:30</p>
+        <p class="sky-note" data-clock-note>Local time in Delhi.</p>
+      </article>
+
+      <article class="tile tile-hobby card" data-reveal data-spotlight data-play>
+        <div class="hobby-art art-shuttle" aria-hidden="true">
+          <svg viewBox="0 0 220 90" class="arc">
+            <path d="M14 76 Q110 -24 206 70" fill="none"></path>
+          </svg>
+          <span class="shuttle"><Icon name="shuttle" /></span>
+        </div>
+        <h3 class="tile-title">Badminton</h3>
+        <p class="tile-text">Keeps me active and clears my head.</p>
+      </article>
+
+      <article class="tile tile-hobby card" data-reveal data-spotlight data-play style="--d:80">
+        <div class="hobby-art art-eq" aria-hidden="true">
+          {Array.from({ length: 9 }, (_, i) => <span style={`--b:${i}`} />)}
+        </div>
+        <h3 class="tile-title">Music, always</h3>
+        <p class="tile-text">My background companion while coding, walking, or zoning out.</p>
+      </article>
+
+      <article class="tile tile-hobby card" data-reveal data-spotlight data-play style="--d:160">
+        <div class="hobby-art art-walk" aria-hidden="true">
+          <svg viewBox="0 0 220 90">
+            <path class="walk-path" d="M12 70 C 50 70, 50 22, 92 26 S 140 72, 176 52 S 204 18, 208 16" fill="none"
+            ></path>
+          </svg>
+          <span class="walker"></span>
+        </div>
+        <h3 class="tile-title">Long walks</h3>
+        <p class="tile-text">Especially when I need time to think or reset.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ---------- Scroll-scrubbed statement ---------- */
+
+  .statement {
+    max-width: 28ch;
+    margin-bottom: clamp(3.5rem, 2rem + 5vw, 7rem);
+    font-size: clamp(1.75rem, 1rem + 3vw, 3.5rem);
+    line-height: 1.16;
+    font-weight: 650;
+    letter-spacing: -0.04em;
+  }
+
+  :global(.js) .statement {
+    --p: 0;
+  }
+
+  .sw {
+    opacity: calc(0.16 + 0.84 * clamp(0, var(--p, 1) * var(--n) - var(--i), 1));
+    transition: opacity 0.2s linear;
+  }
+
+  .sw.em {
+    background: var(--grad-warm);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Bento ---------- */
+
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    min-height: 260px;
+    padding: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  }
+
+  .tile-edu {
+    grid-column: span 7;
+  }
+
+  .tile-sky {
+    grid-column: span 5;
+  }
+
+  .tile-hobby {
+    grid-column: span 4;
+  }
+
+  .tile-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin-bottom: auto;
+    border-radius: 14px;
+    color: var(--tint);
+    background: color-mix(in srgb, var(--tint) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
+  }
+
+  .tile-icon :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tile-label {
+    margin-top: 2rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .tile-title {
+    margin-top: 0.4rem;
+    font-size: var(--fs-xl);
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  .tile-text {
+    margin-top: 0.4rem;
+    color: var(--text-2);
+  }
+
+  /* Degree progress */
+  .degree {
+    margin-top: 1.75rem;
+  }
+
+  .degree-track {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .degree-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--progress) * 100%);
+    border-radius: inherit;
+    background: var(--grad-warm);
+    transform-origin: left;
+  }
+
+  .degree-dot {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--progress) * 100%);
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 0 3px #ff9f0a,
+      0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  :global(.js) .tile-edu:not(.is-in) .degree-fill {
+    transform: scaleX(0);
+  }
+
+  :global(.js) .tile-edu:not(.is-in) .degree-dot {
+    left: 0;
+  }
+
+  .tile-edu .degree-fill {
+    transition: transform 1.6s var(--ease-out) 0.4s;
+  }
+
+  .tile-edu .degree-dot {
+    transition: left 1.6s var(--ease-out) 0.4s;
+  }
+
+  .degree-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-3);
+  }
+
+  .degree-meta span:nth-child(2) {
+    color: var(--text-2);
+    font-weight: 600;
+  }
+
+  /* ---------- Live sky ---------- */
+
+  .tile-sky {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--sky);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+    transition: background 1s ease;
+  }
+
+  .tile-sky::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 40%);
+  }
+
+  .tile-sky[data-daypart='night'] {
+    --sky: linear-gradient(165deg, #070b1f 0%, #151a45 55%, #33265a 100%);
+  }
+
+  .tile-sky[data-daypart='dawn'] {
+    --sky: linear-gradient(165deg, #273563 0%, #b2677a 55%, #f4b67a 100%);
+  }
+
+  .tile-sky[data-daypart='day'] {
+    --sky: linear-gradient(165deg, #1464cc 0%, #3d8ee6 55%, #7fc0f4 100%);
+  }
+
+  .tile-sky[data-daypart='dusk'] {
+    --sky: linear-gradient(165deg, #2c2166 0%, #9c3f7c 55%, #f0875a 100%);
+  }
+
+  .sky {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .stars {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent),
+      radial-gradient(1px 1px at 26% 62%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 38% 14%, #fff, transparent),
+      radial-gradient(1px 1px at 52% 40%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 64% 18%, #fff, transparent),
+      radial-gradient(1px 1px at 72% 58%, #fff, transparent),
+      radial-gradient(1px 1px at 84% 30%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 92% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 80%, #fff, transparent),
+      radial-gradient(1px 1px at 46% 84%, #fff, transparent);
+    transition: opacity 1s ease;
+    animation: twinkle 4s ease-in-out infinite alternate;
+  }
+
+  .tile-sky[data-daypart='night'] .stars {
+    opacity: 0.85;
+  }
+
+  .tile-sky[data-daypart='dawn'] .stars,
+  .tile-sky[data-daypart='dusk'] .stars {
+    opacity: 0.3;
+  }
+
+  .orb {
+    position: absolute;
+    top: 26px;
+    right: 28px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    transition:
+      transform 1.2s var(--ease-out),
+      background 1s ease,
+      box-shadow 1s ease;
+  }
+
+  .tile-sky[data-daypart='night'] .orb {
+    background: radial-gradient(circle at 35% 35%, #fffbe8, #e9e3c8 60%, #cfc7a4);
+    box-shadow:
+      inset -12px -6px 0 0 rgba(0, 0, 0, 0.12),
+      0 0 40px rgba(255, 250, 220, 0.35);
+    transform: scale(0.8);
+  }
+
+  .tile-sky[data-daypart='day'] .orb {
+    background: radial-gradient(circle, #fff9d6, #ffd84d 55%, #ffb800);
+    box-shadow: 0 0 60px 10px rgba(255, 214, 80, 0.6);
+  }
+
+  .tile-sky[data-daypart='dawn'] .orb,
+  .tile-sky[data-daypart='dusk'] .orb {
+    background: radial-gradient(circle, #fff1c9, #ffb35c 55%, #ff7a3d);
+    box-shadow: 0 0 60px 12px rgba(255, 140, 60, 0.55);
+    transform: translateY(60px);
+  }
+
+  .sky-place {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: auto;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .sky-place :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sky-time {
+    margin-top: 0.25rem;
+    font-size: clamp(3rem, 2.4rem + 2.4vw, 4.25rem);
+    font-weight: 650;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sky-zone {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    opacity: 0.75;
+  }
+
+  .sky-note {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    font-weight: 550;
+  }
+
+  @keyframes twinkle {
+    to {
+      filter: brightness(1.6);
+    }
+  }
+
+  /* ---------- Hobby art ---------- */
+
+  .hobby-art {
+    position: relative;
+    height: 90px;
+    color: var(--text);
+  }
+
+  /* The offset paths below are in px, so these boxes match their 220×90 SVGs exactly. */
+  .art-shuttle,
+  .art-walk {
+    width: 220px;
+  }
+
+  .tile-hobby .tile-title {
+    margin-top: 1.5rem;
+  }
+
+  .arc {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .arc path {
+    stroke: var(--text-3);
+    stroke-width: 1.5;
+    stroke-dasharray: 2 7;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  .shuttle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    color: #ff6a3d;
+    offset-path: path('M14 76 Q110 -24 206 70');
+    /* The cork sits at the icon's bottom-left (135°), so point that along the flight. */
+    offset-rotate: auto -135deg;
+    offset-distance: 62%;
+  }
+
+  .shuttle :global(svg) {
+    width: 30px;
+    height: 30px;
+  }
+
+  :global(.is-playing) .shuttle {
+    animation: rally 5s infinite;
+  }
+
+  /* A rally: across, flip to fly cork-first, and back. */
+  @keyframes rally {
+    0% {
+      offset-distance: 2%;
+      offset-rotate: auto -135deg;
+      animation-timing-function: var(--ease-in-out);
+    }
+    49.99% {
+      offset-distance: 98%;
+      offset-rotate: auto -135deg;
+    }
+    50% {
+      offset-distance: 98%;
+      offset-rotate: reverse -135deg;
+      animation-timing-function: var(--ease-in-out);
+    }
+    100% {
+      offset-distance: 2%;
+      offset-rotate: reverse -135deg;
+    }
+  }
+
+  .art-eq {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding-left: 4px;
+  }
+
+  .art-eq span {
+    width: 7px;
+    height: calc(20px + ((var(--b) * 37) - (var(--b) * var(--b) * 4)) * 1px);
+    max-height: 88px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ff453a, #ff9f0a);
+    transform-origin: center;
+  }
+
+  :global(.is-playing) .art-eq span {
+    animation: eq calc(0.7s + var(--b) * 0.09s) ease-in-out infinite alternate;
+    animation-delay: calc(var(--b) * -0.23s);
+  }
+
+  @keyframes eq {
+    0% {
+      transform: scaleY(0.25);
+    }
+    100% {
+      transform: scaleY(1);
+    }
+  }
+
+  .art-walk svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .walk-path {
+    stroke: var(--text-3);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 1 8;
+  }
+
+  .walker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, #30d158 25%, transparent),
+      0 0 16px #30d158;
+    offset-path: path('M12 70 C 50 70, 50 22, 92 26 S 140 72, 176 52 S 204 18, 208 16');
+    offset-distance: 60%;
+  }
+
+  :global(.is-playing) .walker {
+    animation: walk 7s ease-in-out infinite alternate;
+  }
+
+  @keyframes walk {
+    from {
+      offset-distance: 0%;
+    }
+    to {
+      offset-distance: 100%;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .tile-edu,
+    .tile-sky {
+      grid-column: span 12;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .tile-hobby {
+      grid-column: span 12;
+      min-height: 0;
+    }
+  }
+</style>

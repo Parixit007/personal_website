@@ -1,0 +1,232 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import Ghost from './Ghost.astro';
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+
+interface Props {
+  num: string;
+}
+
+const { num } = Astro.props;
+const hasResume = fs.existsSync(path.join(process.cwd(), 'public', 'resume.pdf'));
+---
+
+<section class="section contact" id="contact" aria-labelledby="contact-title">
+  <div class="container">
+    <div class="contact-wrap" data-reveal>
+      <div class="peek" aria-hidden="true">
+        <Ghost size={120} />
+      </div>
+
+      <div class="contact-card card">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow"><b>{num}</b>Contact</p>
+        <h2 class="contact-title" id="contact-title">
+          Let’s build something <span class="gradient-text">together.</span>
+        </h2>
+        <p class="contact-lead">
+          I’m looking for AI/ML and software engineering internships, and I’m always up for talking about ideas. My
+          inbox is open.
+        </p>
+
+        <div class="email-row">
+          <a class="btn btn-primary" href={`mailto:${site.email}`}>
+            <Icon name="mail" /> Email me
+          </a>
+          <button class="btn btn-glass copy" type="button" data-copy={site.email} aria-label="Copy email address">
+            <span class="copy-icons">
+              <Icon name="copy" class="i-copy" />
+              <Icon name="check" class="i-check" />
+            </span>
+            <span class="email-text">{site.email}</span>
+          </button>
+        </div>
+
+        <ul class="links">
+          <li>
+            <a href={site.socials.github} target="_blank" rel="noopener">
+              <Icon name="github" /> GitHub <Icon name="arrow-up-right" class="ext" />
+            </a>
+          </li>
+          <li>
+            <a href={site.socials.linkedin} target="_blank" rel="noopener">
+              <Icon name="linkedin" /> LinkedIn <Icon name="arrow-up-right" class="ext" />
+            </a>
+          </li>
+          {
+            hasResume && (
+              <li>
+                <a href="/resume.pdf" target="_blank" rel="noopener">
+                  <Icon name="file" /> Résumé <Icon name="arrow-up-right" class="ext" />
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-top: calc(var(--section-space) + 40px);
+  }
+
+  .contact-wrap {
+    position: relative;
+  }
+
+  /* The ghost peeks over the top edge of the card. */
+  .peek {
+    position: absolute;
+    left: 50%;
+    top: -96px;
+    z-index: 0;
+    transform: translateX(-50%);
+    animation: peek 5s ease-in-out infinite;
+  }
+
+  .contact-card {
+    z-index: 1;
+    padding: clamp(2.5rem, 1.5rem + 5vw, 5.5rem) clamp(1.25rem, 1rem + 4vw, 4rem);
+    text-align: center;
+    border-radius: var(--radius-xl);
+    background: var(--surface-solid);
+  }
+
+  .glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 55% at 50% 0%, rgba(255, 69, 58, 0.16), transparent 70%),
+      radial-gradient(40% 40% at 15% 100%, rgba(255, 159, 10, 0.12), transparent 70%),
+      radial-gradient(40% 40% at 85% 100%, rgba(191, 90, 242, 0.12), transparent 70%);
+  }
+
+  .contact-card .eyebrow {
+    justify-content: center;
+  }
+
+  .contact-title {
+    max-width: 16ch;
+    margin-inline: auto;
+    font-size: var(--fs-section);
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+  }
+
+  .contact-lead {
+    max-width: 46ch;
+    margin: 1.25rem auto 0;
+    font-size: var(--fs-lg);
+    color: var(--text-2);
+  }
+
+  .email-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+
+  .copy {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .copy-icons {
+    display: grid;
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+
+  .copy-icons :global(svg) {
+    grid-area: 1 / 1;
+    transition:
+      transform 0.5s var(--spring-bouncy),
+      opacity 0.2s ease;
+  }
+
+  .copy-icons :global(.i-check) {
+    color: var(--live);
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  .copy:global(.is-copied) .copy-icons :global(.i-copy) {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+
+  .copy:global(.is-copied) .copy-icons :global(.i-check) {
+    opacity: 1;
+    transform: none;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.75rem;
+    margin-top: 2rem;
+    list-style: none;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.2rem;
+    font-weight: 600;
+    color: var(--text-2);
+    transition: color 0.2s ease;
+  }
+
+  .links a:hover {
+    color: var(--text);
+  }
+
+  .links :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .links :global(.ext) {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    transition: transform 0.5s var(--spring);
+  }
+
+  .links a:hover :global(.ext) {
+    transform: translate(2px, -2px);
+  }
+
+  @keyframes peek {
+    0%,
+    100% {
+      transform: translate(-50%, 0) rotate(-3deg);
+    }
+    50% {
+      transform: translate(-50%, -10px) rotate(3deg);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .email-row .btn {
+      width: 100%;
+    }
+
+    .email-text {
+      font-size: 0.8125rem;
+    }
+  }
+</style>

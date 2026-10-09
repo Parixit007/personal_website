@@ -1,0 +1,200 @@
+---
+import Icon from './Icon.astro';
+import type { Project } from '../data/projects';
+import HighlighterVisual from './visuals/HighlighterVisual.astro';
+import PokerVisual from './visuals/PokerVisual.astro';
+import ChatVisual from './visuals/ChatVisual.astro';
+import TabsVisual from './visuals/TabsVisual.astro';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const visuals = {
+  highlighter: HighlighterVisual,
+  poker: PokerVisual,
+  chat: ChatVisual,
+  tabs: TabsVisual,
+} as const;
+const Visual = visuals[project.visual as keyof typeof visuals];
+---
+
+<article class="project card" data-spotlight data-tilt>
+  <div class="project-visual">
+    {Visual && <Visual />}
+  </div>
+
+  <div class="project-body">
+    <p class="project-meta">
+      <span>{project.period}</span>
+      {project.badge && <span class="badge">{project.badge}</span>}
+    </p>
+    <h3 class="project-name">
+      {
+        project.repo ? (
+          <a class="stretched" href={project.repo} target="_blank" rel="noopener">
+            {project.name}
+          </a>
+        ) : (
+          project.name
+        )
+      }
+    </h3>
+    <p class="project-tagline">{project.tagline}</p>
+    <p class="project-desc">{project.description}</p>
+
+    <div class="project-foot">
+      <ul class="stack" aria-label="Built with">
+        {project.stack.map((s) => <li class="chip">{s}</li>)}
+      </ul>
+      {
+        project.repo ? (
+          <span class="link-arrow" aria-hidden="true">
+            Code <Icon name="arrow-up-right" />
+          </span>
+        ) : (
+          <span class="private">
+            <Icon name="lock" /> Private
+          </span>
+        )
+      }
+    </div>
+  </div>
+</article>
+
+<style>
+  .project {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transform: perspective(1400px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
+    transition:
+      transform 0.7s var(--spring),
+      box-shadow 0.5s ease,
+      border-color 0.5s ease;
+  }
+
+  .project:hover {
+    --lift: -4px;
+    box-shadow: var(--shadow-lg);
+    border-color: var(--line-strong);
+  }
+
+  .project-visual {
+    position: relative;
+    height: 290px;
+    margin: 8px 8px 0;
+    border-radius: calc(var(--radius-lg) - 8px);
+    overflow: hidden;
+    background: var(--surface-2);
+    isolation: isolate;
+  }
+
+  .project-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem 1.75rem 1.75rem;
+  }
+
+  .project-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+  }
+
+  .badge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .project-name {
+    margin-top: 0.6rem;
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+
+  .stretched::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    border-radius: inherit;
+  }
+
+  .stretched:focus-visible {
+    outline: none;
+  }
+
+  .stretched:focus-visible::after {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+
+  .project-tagline {
+    margin-top: 0.35rem;
+    font-size: var(--fs-lg);
+    font-weight: 550;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .project-desc {
+    margin-top: 0.6rem;
+    color: var(--text-2);
+  }
+
+  .project-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+  }
+
+  .private {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-3);
+  }
+
+  .private :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+
+  .project:hover .link-arrow :global(svg) {
+    transform: translate(2px, -2px);
+  }
+
+  @media (max-width: 640px) {
+    .project-visual {
+      height: 250px;
+    }
+
+    .project-body {
+      padding: 1.25rem 1.25rem 1.5rem;
+    }
+  }
+</style>

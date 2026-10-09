@@ -1,0 +1,228 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { journey } from '../data/journey';
+import { site } from '../data/site';
+
+const start = Date.parse(site.education.start);
+const year = Math.min(4, Math.max(1, Math.floor((Date.now() - start) / (365.25 * 864e5)) + 1));
+const ordinal = ['First', 'Second', 'Third', 'Final'][year - 1];
+---
+
+<section class="section journey" id="journey" aria-labelledby="journey-title">
+  <div class="container journey-grid">
+    <div class="journey-side">
+      <SectionHeading
+        num="03"
+        eyebrow="Journey"
+        id="journey-title"
+        title="From Hello, World"
+        muted="to satellites, in about a year."
+      />
+
+      <aside class="now glass" data-reveal aria-label="What I'm doing now">
+        <p class="now-label"><span class="now-dot" aria-hidden="true"></span>Now</p>
+        <ul>
+          <li>{ordinal} year of B.Tech CSE at {site.education.school}</li>
+          <li>Polishing The Greatest Code Highlighter</li>
+          <li>Looking for AI/ML &amp; SWE internships</li>
+        </ul>
+      </aside>
+    </div>
+
+    <div class="timeline">
+      <span class="rail" aria-hidden="true"><span class="rail-fill"></span></span>
+      <ol>
+        {
+          journey.map((m) => (
+            <li class="milestone" data-reveal>
+              <span class="node" aria-hidden="true" />
+              <p class="when">{m.date}</p>
+              <h3 class="what">{m.title}</h3>
+              <p class="why">{m.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .journey-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(2rem, 1rem + 5vw, 6rem);
+    align-items: start;
+  }
+
+  .journey-side {
+    position: sticky;
+    top: 110px;
+  }
+
+  .now {
+    max-width: 380px;
+    padding: 1.25rem 1.4rem;
+    border-radius: var(--radius-md);
+  }
+
+  .now-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+  }
+
+  .now-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--live) 22%, transparent);
+  }
+
+  .now ul {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    list-style: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .now li {
+    position: relative;
+    padding-left: 1rem;
+  }
+
+  .now li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-3);
+  }
+
+  /* ---------- Timeline ---------- */
+
+  .timeline {
+    position: relative;
+    padding-left: 44px;
+    view-timeline: --timeline block;
+  }
+
+  .rail {
+    position: absolute;
+    left: 11px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .rail-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #ff453a, #ff9f0a 60%, #ffd60a);
+    transform-origin: top;
+  }
+
+  @supports (animation-timeline: view()) {
+    .rail-fill {
+      animation: rail-grow linear both;
+      animation-timeline: --timeline;
+      animation-range: cover 35vh cover calc(100% - 55vh);
+    }
+  }
+
+  @keyframes rail-grow {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  .timeline ol {
+    display: grid;
+    gap: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+    list-style: none;
+  }
+
+  .milestone {
+    position: relative;
+  }
+
+  .node {
+    position: absolute;
+    left: -44px;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--line-strong);
+    transition:
+      border-color 0.6s ease 0.2s,
+      box-shadow 0.6s ease 0.2s;
+  }
+
+  .node::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: var(--text-3);
+    transition:
+      background 0.6s ease 0.2s,
+      transform 0.8s var(--spring-bouncy) 0.2s;
+  }
+
+  .milestone:global(.is-in) .node {
+    border-color: #ff6a3d;
+    box-shadow: 0 0 0 6px color-mix(in srgb, #ff6a3d 16%, transparent);
+  }
+
+  .milestone:global(.is-in) .node::after {
+    background: #ff6a3d;
+    transform: scale(1.1);
+  }
+
+  .when {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+
+  .what {
+    margin-top: 0.35rem;
+    font-size: var(--fs-xl);
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+
+  .why {
+    margin-top: 0.35rem;
+    max-width: 44ch;
+    color: var(--text-2);
+  }
+
+  @media (max-width: 900px) {
+    .journey-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .journey-side {
+      position: static;
+    }
+  }
+</style>
