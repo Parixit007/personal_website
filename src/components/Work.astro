@@ -1,0 +1,400 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import ProjectCard from './ProjectCard.astro';
+import SatVisual from './visuals/SatVisual.astro';
+import Icon from './Icon.astro';
+import { featured, projects } from '../data/projects';
+import { site } from '../data/site';
+
+// Grid spans (out of 12) for the cards below the featured project, in order.
+const spans = [7, 5, 5, 7];
+---
+
+<section class="section work" id="work" aria-labelledby="work-title">
+  <div class="container">
+    <SectionHeading
+      num="02"
+      eyebrow="Work"
+      id="work-title"
+      title="Selected work."
+      muted="From satellite imagery to syntax highlighting."
+    />
+
+    <div class="ai-frame" data-reveal data-play>
+      <article class="featured card" data-spotlight>
+        <div class="featured-body">
+          <p class="featured-meta">
+            <span class="featured-tag"><Icon name="sparkles" /> Featured</span>
+            <span>{featured.period}</span>
+          </p>
+          <h3 class="featured-name">{featured.name}</h3>
+          <p class="featured-tagline">{featured.tagline}</p>
+          <p class="featured-desc">{featured.description}</p>
+
+          <ul class="featured-points">
+            {
+              featured.highlights.map((h) => (
+                <li>
+                  <Icon name="check" />
+                  <span>{h}</span>
+                </li>
+              ))
+            }
+          </ul>
+
+          <dl class="stats">
+            {
+              featured.stats.map((s) => (
+                <div>
+                  <dt>{s.label}</dt>
+                  <dd data-count={s.value}>{s.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+
+          <div class="featured-foot">
+            <ul class="stack" aria-label="Built with">
+              {featured.stack.map((s) => <li class="chip">{s}</li>)}
+            </ul>
+            {
+              featured.repo && (
+                <a class="btn btn-primary" href={featured.repo} target="_blank" rel="noopener">
+                  <Icon name="github" /> View on GitHub
+                </a>
+              )
+            }
+          </div>
+        </div>
+        <div class="featured-visual">
+          <SatVisual />
+        </div>
+      </article>
+    </div>
+
+    <div class="grid">
+      {
+        projects.map((p, i) => (
+          <div class="cell" style={`--span:${spans[i] ?? 6}; --d:${(i % 2) * 90}`} data-reveal>
+            <ProjectCard project={p} />
+          </div>
+        ))
+      }
+    </div>
+
+    <a class="more card" href={site.socials.github} target="_blank" rel="noopener" data-reveal>
+      <span class="more-icon"><Icon name="github" /></span>
+      <span class="more-text">
+        <b>More on GitHub</b>
+        <span>Class assignments, experiments and half-finished ideas.</span>
+      </span>
+      <span class="more-arrow"><Icon name="arrow-up-right" /></span>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* ---------- Featured, wrapped in an Apple Intelligence–style glow ---------- */
+
+  .ai-frame {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--radius-xl);
+    margin-bottom: 16px;
+  }
+
+  .ai-frame::before {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    z-index: 5;
+    padding: 1.5px;
+    border-radius: calc(var(--radius-xl) + 1.5px);
+    background: conic-gradient(from var(--ai-angle), #0894ff, #c959dd, #ff2e54, #ff9004, #0894ff);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  .ai-frame::after {
+    content: '';
+    position: absolute;
+    inset: 6% 3%;
+    z-index: -1;
+    border-radius: inherit;
+    background: conic-gradient(from 200deg, #0894ff, #c959dd, #ff2e54, #ff9004, #0894ff);
+    filter: blur(56px);
+    opacity: 0.22;
+  }
+
+  :global([data-theme='dark']) .ai-frame::after {
+    opacity: 0.3;
+  }
+
+  .ai-frame:global(.is-playing)::before {
+    animation: ai-spin 6s linear infinite;
+  }
+
+  @keyframes ai-spin {
+    to {
+      --ai-angle: 360deg;
+    }
+  }
+
+  .featured {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    border-radius: var(--radius-xl);
+    border-color: transparent;
+  }
+
+  .featured-body {
+    display: flex;
+    flex-direction: column;
+    padding: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+  }
+
+  .featured-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem 0.3rem 0.5rem;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: #fff;
+    background: linear-gradient(100deg, #0894ff, #c959dd 50%, #ff2e54);
+  }
+
+  .featured-tag :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+
+  .featured-name {
+    margin-top: 1rem;
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+  }
+
+  .featured-tagline {
+    margin-top: 0.5rem;
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    color: var(--text-2);
+  }
+
+  .featured-desc {
+    margin-top: 1rem;
+    color: var(--text-2);
+  }
+
+  .featured-points {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    list-style: none;
+    font-size: 0.9375rem;
+  }
+
+  .featured-points li {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .featured-points :global(svg) {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    color: #30d158;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 1.75rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+
+  .stats dd {
+    margin: 0;
+    font-size: clamp(2rem, 1.6rem + 1.4vw, 2.75rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stats dt {
+    margin-top: 0.4rem;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    color: var(--text-3);
+  }
+
+  .featured-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.75rem;
+  }
+
+  .featured-foot .btn {
+    height: 44px;
+    padding: 0 1.1rem;
+    font-size: 0.9375rem;
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+  }
+
+  .featured-visual {
+    padding: 10px;
+    min-height: 460px;
+  }
+
+  .featured-visual :global(.sat) {
+    border-radius: calc(var(--radius-xl) - 10px);
+  }
+
+  /* ---------- Grid ---------- */
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .cell {
+    grid-column: span var(--span);
+  }
+
+  .more {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 16px;
+    padding: 1.25rem 1.5rem;
+    transition:
+      transform 0.6s var(--spring),
+      border-color 0.3s ease;
+  }
+
+  .more:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+  }
+
+  .more-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+  }
+
+  .more-icon :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .more-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .more-text b {
+    font-size: 1.125rem;
+    letter-spacing: -0.02em;
+  }
+
+  .more-text span {
+    color: var(--text-2);
+  }
+
+  .more-arrow {
+    margin-left: auto;
+    color: var(--text-3);
+    transition: transform 0.5s var(--spring);
+  }
+
+  .more-arrow :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .more:hover .more-arrow {
+    transform: translate(3px, -3px);
+    color: var(--text);
+  }
+
+  @media (max-width: 980px) {
+    .featured {
+      grid-template-columns: 1fr;
+    }
+
+    .featured-visual {
+      order: -1;
+      min-height: 0;
+      height: 400px;
+    }
+
+    .cell {
+      grid-column: span 12;
+    }
+  }
+
+  @media (min-width: 700px) and (max-width: 980px) {
+    .cell {
+      grid-column: span 6;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .featured-visual {
+      height: 380px;
+    }
+
+    .stats dd {
+      font-size: 1.875rem;
+    }
+  }
+</style>

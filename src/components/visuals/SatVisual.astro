@@ -1,0 +1,557 @@
+---
+// A stylised aerial tile, generated at build time from a fixed seed so it never changes.
+// Overlays replay SatQuery AI's loop: question → scan → water mask + detections → grounded answer.
+
+const W = 480;
+const H = 360;
+
+function mulberry32(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20260807);
+const pick = <T,>(xs: readonly T[]) => xs[Math.floor(rand() * xs.length)];
+const r1 = (n: number) => Math.round(n * 10) / 10;
+
+type Pt = [number, number];
+
+// --- Farmland: a jittered grid, rotated like fields that follow an old road. ---
+const fieldColors = ['#5f6f3d', '#6f7d45', '#7e8a4d', '#8a8656', '#9a8f62', '#56693a', '#4d6034', '#a1996b', '#687a3f'];
+const cols = 13;
+const rows = 11;
+const cw = 64;
+const ch = 52;
+const ox = -180;
+const oy = -150;
+const verts: Pt[][] = [];
+for (let r = 0; r <= rows; r++) {
+  verts.push([]);
+  for (let c = 0; c <= cols; c++) {
+    verts[r].push([ox + c * cw + (rand() - 0.5) * 22, oy + r * ch + (rand() - 0.5) * 18]);
+  }
+}
+const fields: { d: string; fill: string; rows: boolean }[] = [];
+for (let r = 0; r < rows; r++) {
+  for (let c = 0; c < cols; c++) {
+    const q = [verts[r][c], verts[r][c + 1], verts[r + 1][c + 1], verts[r + 1][c]];
+    fields.push({
+      d: `M${q.map(([x, y]) => `${r1(x)} ${r1(y)}`).join('L')}Z`,
+      fill: pick(fieldColors),
+      rows: rand() < 0.28,
+    });
+  }
+}
+
+// --- River: a Catmull-Rom spline through hand-placed points. ---
+const riverPts: Pt[] = [
+  [540, 10],
+  [440, 70],
+  [350, 128],
+  [262, 168],
+  [196, 222],
+  [146, 286],
+  [86, 330],
+  [-60, 382],
+];
+function catmullRom(pts: Pt[]) {
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  const samples: Pt[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1: Pt = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2: Pt = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${r1(c1[0])} ${r1(c1[1])} ${r1(c2[0])} ${r1(c2[1])} ${p2[0]} ${p2[1]}`;
+    for (let s = 0; s <= 16; s++) {
+      const t = s / 16;
+      const u = 1 - t;
+      samples.push([
+        u * u * u * p1[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p2[0],
+        u * u * u * p1[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p2[1],
+      ]);
+    }
+  }
+  return { d, samples };
+}
+const river = catmullRom(riverPts);
+const distToRiver = ([x, y]: Pt) => Math.min(...river.samples.map(([sx, sy]) => Math.hypot(sx - x, sy - y)));
+
+// --- Roads ---
+const roadA: [Pt, Pt] = [
+  [-20, 96],
+  [500, 238],
+];
+const roadAngle = (Math.atan2(roadA[1][1] - roadA[0][1], roadA[1][0] - roadA[0][0]) * 180) / Math.PI;
+
+// --- Settlement along the main road, kept off the water. ---
+const roofs = ['#dcd5c6', '#c97a5b', '#b3b6b8', '#e8e3d6', '#a96c50', '#cfc3a8'];
+const buildings: { x: number; y: number; w: number; h: number; fill: string; dist: number }[] = [];
+let guard = 0;
+while (buildings.length < 34 && guard++ < 4000) {
+  const t = 0.26 + rand() * 0.46;
+  const side = rand() < 0.5 ? -1 : 1;
+  const off = 9 + rand() * 46;
+  const bx = roadA[0][0] + (roadA[1][0] - roadA[0][0]) * t;
+  const by = roadA[0][1] + (roadA[1][1] - roadA[0][1]) * t;
+  const nx = -Math.sin((roadAngle * Math.PI) / 180);
+  const ny = Math.cos((roadAngle * Math.PI) / 180);
+  const x = bx + nx * off * side;
+  const y = by + ny * off * side;
+  const w = 8 + rand() * 7;
+  const h = 6 + rand() * 5;
+  const dist = distToRiver([x, y]);
+  if (dist < 26) continue;
+  if (buildings.some((b) => Math.hypot(b.x - x, b.y - y) < 15)) continue;
+  buildings.push({ x: r1(x), y: r1(y), w: r1(w), h: r1(h), fill: pick(roofs), dist });
+}
+// The detections: buildings closest to the river.
+const detected = [...buildings].sort((a, b) => a.dist - b.dist).slice(0, 8);
+
+// --- Trees along the banks and in a couple of groves ---
+const trees: { x: number; y: number; r: number; fill: string }[] = [];
+for (const [i, [sx, sy]] of river.samples.entries()) {
+  if (i % 2) continue;
+  for (const side of [-1, 1]) {
+    if (rand() < 0.35) continue;
+    const a = rand() * Math.PI * 2;
+    const off = 20 + rand() * 14;
+    const x = sx + Math.cos(a) * off * side;
+    const y = sy + Math.sin(a) * off * side;
+    if (distToRiver([x, y]) < 17) continue;
+    trees.push({ x: r1(x), y: r1(y), r: r1(2.5 + rand() * 3.2), fill: pick(['#2d4223', '#35502a', '#3d5a2e']) });
+  }
+}
+for (const [gx, gy] of [
+  [390, 300],
+  [70, 150],
+] as Pt[]) {
+  for (let i = 0; i < 26; i++) {
+    const x = gx + (rand() - 0.5) * 70;
+    const y = gy + (rand() - 0.5) * 44;
+    trees.push({ x: r1(x), y: r1(y), r: r1(3 + rand() * 3.5), fill: pick(['#2d4223', '#35502a', '#3d5a2e']) });
+  }
+}
+
+const count = detected.length;
+
+// The static layers are plain markup (no scoped-style attributes), which keeps the page light.
+const angle = r1(roadAngle);
+const staticLayers = [
+  `<rect width="${W}" height="${H}" fill="#3f4c2d"/>`,
+  `<g transform="rotate(14 240 180)">`,
+  ...fields.map(
+    (f) =>
+      `<path d="${f.d}" fill="${f.fill}" stroke="#3a4629" stroke-width="2.4"/>` +
+      (f.rows ? `<path d="${f.d}" fill="url(#sat-rows)"/>` : ''),
+  ),
+  `</g>`,
+  ...trees.map((t) => `<circle cx="${t.x}" cy="${t.y}" r="${t.r}" fill="${t.fill}"/>`),
+  `<path d="${river.d}" fill="none" stroke="#2f4526" stroke-width="40" stroke-linecap="round" opacity="0.8"/>`,
+  `<path d="${river.d}" fill="none" stroke="#28536b" stroke-width="24" stroke-linecap="round"/>`,
+  `<path d="${river.d}" fill="none" stroke="#33708f" stroke-width="12" stroke-linecap="round" opacity="0.7"/>`,
+  `<line x1="${roadA[0][0]}" y1="${roadA[0][1]}" x2="${roadA[1][0]}" y2="${roadA[1][1]}" stroke="#8d8672" stroke-width="7"/>`,
+  `<line x1="${roadA[0][0]}" y1="${roadA[0][1]}" x2="${roadA[1][0]}" y2="${roadA[1][1]}" stroke="#d6cfbc" stroke-width="4.5"/>`,
+  `<path d="M300 204 L336 380" stroke="#cbc4b0" stroke-width="3" fill="none"/>`,
+  `<path d="M150 140 L110 -10" stroke="#cbc4b0" stroke-width="3" fill="none"/>`,
+  ...buildings.map(
+    (b) =>
+      `<g transform="rotate(${angle} ${b.x} ${b.y})">` +
+      `<rect x="${r1(b.x - b.w / 2 + 1.6)}" y="${r1(b.y - b.h / 2 + 1.6)}" width="${b.w}" height="${b.h}" fill="#1d2414" opacity="0.45"/>` +
+      `<rect x="${r1(b.x - b.w / 2)}" y="${r1(b.y - b.h / 2)}" width="${b.w}" height="${b.h}" fill="${b.fill}"/></g>`,
+  ),
+].join('');
+---
+
+<div class="sat" data-play>
+  <svg class="sat-map" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <pattern id="sat-rows" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(-14)">
+        <rect width="4" height="4" fill="transparent"></rect>
+        <rect width="4" height="1.3" fill="#000" opacity="0.14"></rect>
+      </pattern>
+      <linearGradient id="sat-scan" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#64d2ff" stop-opacity="0"></stop>
+        <stop offset="0.85" stop-color="#64d2ff" stop-opacity="0.35"></stop>
+        <stop offset="1" stop-color="#e5f8ff" stop-opacity="0.9"></stop>
+      </linearGradient>
+      <radialGradient id="sat-vignette" cx="0.5" cy="0.5" r="0.75">
+        <stop offset="0.6" stop-color="#000" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+      </radialGradient>
+    </defs>
+
+    <g set:html={staticLayers} />
+
+    <!-- Model outputs -->
+    <g class="sat-water">
+      <path d={river.d} fill="none" stroke="#0a84ff" stroke-opacity="0.55" stroke-width="26" stroke-linecap="round"
+      ></path>
+      <path d={river.d} fill="none" stroke="#9fd4ff" stroke-width="1.2" stroke-dasharray="3 4"></path>
+    </g>
+
+    {
+      detected.map((b, i) => (
+        <g class="sat-box" style={`--k:${i}`} transform={`rotate(${r1(roadAngle)} ${b.x} ${b.y})`}>
+          <rect
+            x={b.x - b.w / 2 - 3}
+            y={b.y - b.h / 2 - 3}
+            width={b.w + 6}
+            height={b.h + 6}
+            rx="1.5"
+            fill="rgba(255,214,10,0.12)"
+            stroke="#ffd60a"
+            stroke-width="1.4"
+          />
+        </g>
+      ))
+    }
+
+    <rect class="sat-scan" x="0" y="-70" width={W} height="70" fill="url(#sat-scan)"></rect>
+    <rect width={W} height={H} fill="url(#sat-vignette)"></rect>
+  </svg>
+
+  <div class="sat-hud" aria-hidden="true">
+    <span class="hud-chip"><i></i>RGB · 0.5 m/px</span>
+  </div>
+
+  <div class="sat-q glass-dark">
+    <span class="q-avatar">P</span>
+    <span>How many buildings are close to the river?</span>
+  </div>
+
+  <div class="sat-a glass-dark">
+    <div class="a-tools">
+      <span class="tool"><i class="t-water"></i>water_body_segmentation</span>
+      <span class="tool"><i class="t-ground"></i>text_guided_grounding</span>
+    </div>
+    <p class="a-text"><b>{count} buildings</b> sit close to the river.</p>
+    <p class="a-trace">
+      <span>✓ traced</span><span>2 tools</span><span>confidence 0.83</span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .sat {
+    position: relative;
+    height: 100%;
+    min-height: 360px;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #3f4c2d;
+    container-type: inline-size;
+  }
+
+  .sat-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Only the rect scales around its own centre; the group keeps its rotate() attribute as-is. */
+  .sat-box rect {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .sat-scan {
+    opacity: 0;
+  }
+
+  .glass-dark {
+    position: absolute;
+    color: #fff;
+    background: rgba(18, 18, 22, 0.58);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 12px 40px rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+  }
+
+  .sat-hud {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  .hud-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  .hud-chip i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 8px #30d158;
+  }
+
+  .sat-q {
+    top: 18px;
+    left: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 36px);
+    padding: 8px 14px 8px 8px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 550;
+    letter-spacing: -0.01em;
+  }
+
+  .q-avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff6a3d, #db3b3b);
+  }
+
+  .sat-a {
+    right: 18px;
+    bottom: 18px;
+    width: min(330px, calc(100% - 36px));
+    padding: 14px 16px;
+    border-radius: 20px;
+  }
+
+  .a-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .tool i {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+  }
+
+  .t-water {
+    background: #0a84ff;
+  }
+
+  .t-ground {
+    background: #ffd60a;
+  }
+
+  .a-text {
+    margin-top: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+
+  .a-text b {
+    font-weight: 700;
+  }
+
+  .a-trace {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .a-trace span:first-child {
+    color: #30d158;
+  }
+
+  /* Small screens: keep the map visible — drop the HUD and tool chips (the trace still counts them). */
+  @container (max-width: 420px) {
+    .sat-hud,
+    .a-tools {
+      display: none;
+    }
+
+    .sat-q {
+      top: 14px;
+      left: 14px;
+      max-width: calc(100% - 28px);
+      font-size: 12.5px;
+    }
+
+    .sat-a {
+      right: 14px;
+      bottom: 14px;
+      width: calc(100% - 28px);
+      padding: 12px 14px;
+    }
+
+    .a-text {
+      margin-top: 0;
+    }
+  }
+
+  /* ---------- The loop (12s) ---------- */
+
+  .is-playing .sat-q {
+    animation: sat-q 12s var(--ease-out) infinite;
+  }
+
+  .is-playing .sat-scan {
+    animation: sat-scan 12s linear infinite;
+  }
+
+  .is-playing .sat-water {
+    animation: sat-water 12s ease infinite;
+  }
+
+  .is-playing .sat-box rect {
+    animation: sat-box 12s var(--ease-out) infinite both;
+    animation-delay: calc(var(--k) * 90ms);
+  }
+
+  .is-playing .sat-a {
+    animation: sat-a 12s var(--ease-out) infinite;
+  }
+
+  .is-playing .tool {
+    animation: sat-tool 12s var(--ease-out) infinite both;
+  }
+
+  .is-playing .tool + .tool {
+    animation-delay: 0.15s;
+  }
+
+  @keyframes sat-q {
+    0%,
+    3% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    8%,
+    91% {
+      opacity: 1;
+      transform: none;
+    }
+    97%,
+    100% {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes sat-scan {
+    0%,
+    13% {
+      opacity: 0;
+      transform: translateY(0);
+    }
+    15% {
+      opacity: 1;
+    }
+    37% {
+      opacity: 1;
+      transform: translateY(430px);
+    }
+    39%,
+    100% {
+      opacity: 0;
+      transform: translateY(430px);
+    }
+  }
+
+  @keyframes sat-water {
+    0%,
+    19% {
+      opacity: 0;
+    }
+    27%,
+    91% {
+      opacity: 1;
+    }
+    97%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes sat-box {
+    0%,
+    25% {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+    29%,
+    91% {
+      opacity: 1;
+      transform: none;
+    }
+    96%,
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  @keyframes sat-a {
+    0%,
+    40% {
+      opacity: 0;
+      transform: translateY(24px) scale(0.96);
+    }
+    46%,
+    91% {
+      opacity: 1;
+      transform: none;
+    }
+    97%,
+    100% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes sat-tool {
+    0%,
+    43% {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    49%,
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

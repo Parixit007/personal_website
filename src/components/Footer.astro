@@ -1,0 +1,98 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+import { getNotes } from '../lib/notes';
+
+const year = new Date().getFullYear();
+// Only advertise the RSS feed once there's a published note in it.
+const hasFeed = (await getNotes()).some((note) => !note.data.draft);
+---
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <p class="copyright">© {year} {site.name}</p>
+      <p class="made">Designed and built in New Delhi. Made with Astro.</p>
+    </div>
+    <nav class="footer-links" aria-label="Elsewhere">
+      <a href={site.socials.github} target="_blank" rel="noopener" aria-label="GitHub"><Icon name="github" /></a>
+      <a href={site.socials.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn"><Icon name="linkedin" /></a>
+      <a href={`mailto:${site.email}`} aria-label="Email"><Icon name="mail" /></a>
+      {
+        hasFeed && (
+          <a href="/rss.xml" aria-label="RSS feed">
+            <Icon name="rss" />
+          </a>
+        )
+      }
+      <a class="top" href="#top" data-to-top>
+        Top <Icon name="arrow-up" />
+      </a>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding: 2.5rem 0 calc(2.5rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    font-size: 0.875rem;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+
+  .copyright {
+    font-weight: 600;
+  }
+
+  .made {
+    margin-top: 0.15rem;
+    color: var(--text-3);
+  }
+
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .footer-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem;
+    border-radius: 999px;
+    color: var(--text-2);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+
+  .footer-links :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .top {
+    margin-left: 0.5rem;
+    padding-inline: 0.9rem !important;
+    font-weight: 600;
+    border: 1px solid var(--line);
+  }
+
+  .top :global(svg) {
+    width: 15px;
+    height: 15px;
+  }
+</style>

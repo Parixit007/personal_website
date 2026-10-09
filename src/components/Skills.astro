@@ -1,0 +1,349 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import Icon from './Icon.astro';
+import { logos, languages, skillGroups } from '../data/skills';
+
+// Near-black brand colours would vanish in dark mode, so those follow the text colour.
+function luminance(hex: string) {
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const logoColor = (hex: string) => (luminance(hex) < 0.05 ? 'currentColor' : `#${hex}`);
+
+const half = Math.ceil(logos.length / 2);
+const rows = [logos.slice(0, half), logos.slice(half)];
+---
+
+<section class="section skills" id="skills" aria-labelledby="skills-title">
+  <div class="container">
+    <SectionHeading num="04" eyebrow="Skills" id="skills-title" title="Toolbox." muted="What I reach for when I build." />
+  </div>
+
+  <!-- Each logo is defined once and reused by both copies of the marquee track. -->
+  <svg class="sprite" aria-hidden="true">
+    {
+      logos.map((l) => (
+        <symbol id={`logo-${l.icon.slug}`} viewBox="0 0 24 24">
+          <path d={l.icon.path} fill={logoColor(l.icon.hex)} />
+        </symbol>
+      ))
+    }
+  </svg>
+
+  <div class="marquee" data-reveal aria-label="Technologies I use">
+    {
+      rows.map((row, r) => (
+        <div class:list={['marquee-row', { reverse: r === 1 }]}>
+          <ul class="marquee-track">
+            {[...row, ...row].map((l, i) => (
+              <li class="logo-pill" aria-hidden={i >= row.length ? 'true' : undefined}>
+                <svg aria-hidden="true">
+                  <use href={`#logo-${l.icon.slug}`} />
+                </svg>
+                {l.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="container">
+    <div class="skills-grid">
+      <article class="skill-card card span-7" data-reveal data-spotlight>
+        <span class="skill-icon" style="--tint:#bf5af2"><Icon name="cpu" /></span>
+        <h3>{skillGroups.ai.title}</h3>
+        <p class="lead">{skillGroups.ai.lead}</p>
+        <ul class="chips">{skillGroups.ai.items.map((s) => <li class="chip">{s}</li>)}</ul>
+        <p class="sub">Computer vision</p>
+        <ul class="tasks">
+          {
+            skillGroups.ai.tasks.map((t) => (
+              <li>
+                <span class="task-dot" />
+                {t}
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <article class="skill-card card span-5" data-reveal data-spotlight style="--d:90">
+        <span class="skill-icon" style="--tint:#0a84ff"><Icon name="code" /></span>
+        <h3>Languages</h3>
+        <p class="lead">Python for AI and backends, TypeScript for tools and interfaces.</p>
+        <ul class="apps">
+          {
+            languages.map((l) => (
+              <li>
+                <span class="app" style={`--tint:${l.tint}; --glyph:${l.glyph ?? '#fff'}`}>
+                  {l.icon ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d={l.icon.path} />
+                    </svg>
+                  ) : (
+                    <Icon name="database" />
+                  )}
+                </span>
+                <span class="app-name">{l.name}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <article class="skill-card card span-5" data-reveal data-spotlight>
+        <span class="skill-icon" style="--tint:#30d158"><Icon name="layers" /></span>
+        <h3>{skillGroups.tools.title}</h3>
+        <p class="lead">{skillGroups.tools.lead}</p>
+        <ul class="chips">{skillGroups.tools.items.map((s) => <li class="chip">{s}</li>)}</ul>
+      </article>
+
+      <article class="skill-card card span-7" data-reveal data-spotlight style="--d:90">
+        <span class="skill-icon" style="--tint:#ff9f0a"><Icon name="globe" /></span>
+        <h3>{skillGroups.web.title}</h3>
+        <p class="lead">{skillGroups.web.lead}</p>
+        <ul class="chips">{skillGroups.web.items.map((s) => <li class="chip">{s}</li>)}</ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ---------- Marquee ---------- */
+
+  .sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .marquee {
+    display: grid;
+    gap: 12px;
+    margin-bottom: clamp(2.5rem, 2rem + 2vw, 4rem);
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    list-style: none;
+    animation: marquee 48s linear infinite;
+  }
+
+  .reverse .marquee-track {
+    animation-direction: reverse;
+    animation-duration: 56s;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  .logo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    height: 52px;
+    padding: 0 1.2rem 0 1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .logo-pill svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(calc(-50% - 6px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      flex-wrap: wrap;
+      justify-content: center;
+      width: auto;
+      padding-inline: var(--gutter);
+    }
+
+    .logo-pill[aria-hidden='true'] {
+      display: none;
+    }
+  }
+
+  /* ---------- Cards ---------- */
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .span-7 {
+    grid-column: span 7;
+  }
+
+  .span-5 {
+    grid-column: span 5;
+  }
+
+  .skill-card {
+    padding: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  }
+
+  .skill-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    color: var(--tint);
+    background: color-mix(in srgb, var(--tint) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
+  }
+
+  .skill-icon :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .skill-card h3 {
+    margin-top: 1.5rem;
+    font-size: var(--fs-2xl);
+    letter-spacing: -0.035em;
+  }
+
+  .lead {
+    margin-top: 0.4rem;
+    color: var(--text-2);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 1.25rem;
+    list-style: none;
+  }
+
+  .chips .chip {
+    font-size: 0.875rem;
+    padding: 0.42rem 0.85rem;
+    color: var(--text);
+  }
+
+  .sub {
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+  }
+
+  .tasks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+    margin-top: 0.75rem;
+    list-style: none;
+    font-weight: 550;
+  }
+
+  .tasks li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .task-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #bf5af2, #ff375f);
+  }
+
+  /* Languages as app icons */
+  .apps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.1rem;
+    margin-top: 1.5rem;
+    list-style: none;
+  }
+
+  .apps li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 64px;
+  }
+
+  .app {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    color: var(--glyph);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 70%, #fff), var(--tint) 55%);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.55),
+      inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+      0 10px 22px -8px color-mix(in srgb, var(--tint) 70%, transparent);
+    transition: transform 0.6s var(--spring-bouncy);
+  }
+
+  .app:hover {
+    transform: translateY(-4px) scale(1.06) rotate(-3deg);
+  }
+
+  .app svg {
+    width: 32px;
+    height: 32px;
+    fill: currentColor;
+  }
+
+  .app :global(svg) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-name {
+    font-size: 0.8125rem;
+    font-weight: 550;
+    color: var(--text-2);
+  }
+
+  @media (max-width: 900px) {
+    .span-7,
+    .span-5 {
+      grid-column: span 12;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tasks {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

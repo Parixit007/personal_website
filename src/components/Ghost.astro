@@ -1,0 +1,178 @@
+---
+// The red ghost — the site's mascot since v1. Rendered as tinted "liquid glass".
+// `interactive` ghosts follow the cursor with their eyes, blink, and say boo when clicked
+// (see scripts/ghost.ts).
+interface Props {
+  size?: number;
+  interactive?: boolean;
+  label?: string;
+  class?: string;
+}
+
+const { size = 160, interactive = false, label, class: className } = Astro.props;
+
+// Gradient ids are global to the document, so every ghost gets its own.
+const uid = `g${Math.random().toString(36).slice(2, 8)}`;
+
+// Body outline: a round head, straight sides and a skirt with three tails.
+const rest =
+  'M24 96A76 76 0 0 1 176 96L176 188Q158 240 140 196Q129 172 118 196Q100 240 82 196Q71 172 60 196Q42 240 24 188Z';
+const flutter =
+  'M24 96A76 76 0 0 1 176 96L176 191Q163 234 143 199Q131 177 118 194Q97 237 80 199Q68 177 57 194Q37 236 24 190Z';
+---
+
+<div
+  class:list={['ghost', className, { 'is-interactive': interactive }]}
+  style={`--size:${size}px`}
+  data-ghost={interactive ? '' : undefined}
+  role={interactive ? 'button' : label ? 'img' : undefined}
+  tabindex={interactive ? 0 : undefined}
+  aria-label={interactive ? 'Say boo to the ghost' : label}
+  aria-hidden={!interactive && !label ? 'true' : undefined}
+>
+  <svg class="ghost-svg" viewBox="0 0 200 250" aria-hidden="true">
+    <defs>
+      <linearGradient id={`${uid}-body`} x1="0.15" y1="0" x2="0.85" y2="1">
+        <stop offset="0" stop-color="#ff8170"></stop>
+        <stop offset="0.42" stop-color="#e8453c"></stop>
+        <stop offset="1" stop-color="#b8252b"></stop>
+      </linearGradient>
+      <radialGradient id={`${uid}-shine`} cx="0.3" cy="0.2" r="0.6">
+        <stop offset="0" stop-color="#fff" stop-opacity="0.6"></stop>
+        <stop offset="0.45" stop-color="#fff" stop-opacity="0.08"></stop>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+      </radialGradient>
+      <linearGradient id={`${uid}-rim`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity="0.95"></stop>
+        <stop offset="0.4" stop-color="#fff" stop-opacity="0.1"></stop>
+        <stop offset="0.75" stop-color="#fff" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#fff" stop-opacity="0.35"></stop>
+      </linearGradient>
+      <linearGradient id={`${uid}-depth`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0.55" stop-color="#5a0d12" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#5a0d12" stop-opacity="0.35"></stop>
+      </linearGradient>
+      <path id={`${uid}-shape`} d={rest}>
+        <animate
+          attributeName="d"
+          dur="2.4s"
+          repeatCount="indefinite"
+          calcMode="spline"
+          keyTimes="0;0.5;1"
+          keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+          values={`${rest};${flutter};${rest}`}></animate>
+      </path>
+    </defs>
+
+    <g class="ghost-body">
+      <use href={`#${uid}-shape`} fill={`url(#${uid}-body)`}></use>
+      <use href={`#${uid}-shape`} fill={`url(#${uid}-depth)`}></use>
+      <use href={`#${uid}-shape`} fill={`url(#${uid}-shine)`}></use>
+      <use href={`#${uid}-shape`} fill="none" stroke={`url(#${uid}-rim)`} stroke-width="2.5"></use>
+      <!-- A glassy highlight streak across the crown. -->
+      <path d="M52 70C62 46 86 32 110 31" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="7" stroke-linecap="round"></path>
+    </g>
+
+    <g class="ghost-cheeks">
+      <ellipse cx="56" cy="128" rx="11" ry="6" fill="#ffb3a8"></ellipse>
+      <ellipse cx="144" cy="128" rx="11" ry="6" fill="#ffb3a8"></ellipse>
+    </g>
+
+    <g class="ghost-eyes">
+      <ellipse class="ghost-eye" cx="74" cy="104" rx="11" ry="15" fill="#fff"></ellipse>
+      <ellipse class="ghost-eye" cx="126" cy="104" rx="11" ry="15" fill="#fff"></ellipse>
+    </g>
+  </svg>
+  {interactive && <span class="ghost-boo" aria-hidden="true">Boo!</span>}
+</div>
+
+<style>
+  .ghost {
+    position: relative;
+    width: var(--size);
+    aspect-ratio: 200 / 250;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ghost-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 calc(var(--size) * 0.1) calc(var(--size) * 0.16) rgba(219, 59, 59, 0.3));
+  }
+
+  .ghost-eyes {
+    transform: translate(calc(var(--ex, 0) * 1px), calc(var(--ey, 0) * 1px));
+    transition: transform 0.12s linear;
+  }
+
+  .ghost-eye {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.12s ease;
+  }
+
+  .ghost.is-blinking .ghost-eye {
+    transform: scaleY(0.12);
+  }
+
+  .ghost-cheeks {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .is-interactive {
+    cursor: pointer;
+    border-radius: 40%;
+  }
+
+  .is-interactive:hover .ghost-cheeks,
+  .ghost.is-booing .ghost-cheeks {
+    opacity: 0.75;
+  }
+
+  .ghost.is-booing .ghost-svg {
+    animation: ghost-boo 0.7s var(--spring-bouncy);
+  }
+
+  .ghost-boo {
+    position: absolute;
+    top: 2%;
+    right: -18%;
+    padding: 0.35em 0.7em;
+    border-radius: 999px 999px 999px 6px;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    font-size: max(13px, calc(var(--size) * 0.09));
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+    transform-origin: 0% 100%;
+    transition:
+      opacity 0.25s ease,
+      transform 0.5s var(--spring-bouncy);
+    pointer-events: none;
+  }
+
+  .ghost.is-booing .ghost-boo {
+    opacity: 1;
+    transform: none;
+  }
+
+  @keyframes ghost-boo {
+    0% {
+      transform: scale(1, 1);
+    }
+    25% {
+      transform: scale(1.12, 0.9) translateY(4%);
+    }
+    55% {
+      transform: scale(0.94, 1.08) translateY(-6%);
+    }
+    100% {
+      transform: none;
+    }
+  }
+</style>
